@@ -1,12 +1,10 @@
 package ca.mcgill.music.ddmal.meisearch;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 import org.hamcrest.core.Is;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ResponseTest {
