@@ -1,6 +1,7 @@
 package ca.mcgill.music.ddmal.meisearch;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ca.mcgill.music.ddmal.mei.MeiDocument;
@@ -13,13 +14,14 @@ import ca.mcgill.music.ddmal.mei.MeiElement;
 public class NaiveDocSearcher implements DocSearcher {
 
     public List<Response> find(MeiDocument doc, String query) {
-        String[] qparts = query.split(".");
-        List<MeiElement> neumes = doc.getElementsByName("neume");
+        String[] parts = query.split("");
+        String[] qparts = Arrays.copyOfRange(parts, 1, parts.length);
+        List<MeiElement> notes = doc.getElementsByName("note");
         List<Response> res = new ArrayList<Response>();
-        for (int i = 0; i < neumes.size() - query.length(); i++) {
+        for (int i = 0; i < notes.size() - query.length(); i++) {
             boolean match = true;
             for (int j = 0; j < query.length(); j++) {
-                if (qparts[j].equals(neumes.get(i + j).getAttribute("pname"))) {
+                if (qparts[j].equals(notes.get(i + j).getAttribute("pname"))) {
                     match = true;
                 } else {
                     match = false;
@@ -27,7 +29,7 @@ public class NaiveDocSearcher implements DocSearcher {
                 }
             }
             if (match) {
-                Response r = Response.makeResponse(neumes.subList(i, i + query.length()));
+                Response r = Response.makeResponse(doc, notes.subList(i, i + query.length()));
                 res.add(r);
             }
         }

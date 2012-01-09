@@ -14,17 +14,22 @@ public class StringDocSearcher implements DocSearcher {
 
     public List<Response> find(MeiDocument doc, String query) {
         StringBuilder sb = new StringBuilder();
-        List<MeiElement> neumes = doc.getElementsByName("neume");
-        for (MeiElement e : neumes) {
+        List<MeiElement> notes = doc.getElementsByName("note");
+        for (MeiElement e : notes) {
             sb.append(e.getAttribute("pname"));
         }
         String haystack = sb.toString();
         int i = 0;
         List<Response> res = new ArrayList<Response>();
-        while (i > 0) {
-            i = haystack.indexOf(query, 0);
+        i = haystack.indexOf(query);
+        if (i > 0) {
+            Response r = Response.makeResponse(doc, notes.subList(i, i + query.length()));
+            res.add(r);
+        }
+        while (i != -1) {
+            i = haystack.indexOf(query, i+1);
             if (i > 0) {
-                Response r = Response.makeResponse(neumes.subList(i, i + query.length()));
+                Response r = Response.makeResponse(doc, notes.subList(i, i + query.length()));
                 res.add(r);
             }
         }
