@@ -1,5 +1,11 @@
 package ca.mcgill.music.ddmal.meisearch;
 
+import java.util.List;
+
+import ca.mcgill.music.ddmal.mei.MeiElement;
+
+// Origin is upper left
+
 /**
  * A single response has 4 points.
  */
@@ -15,6 +21,17 @@ public class Response {
         this.ll = ll;
         this.ur = ur;
         this.lr = lr;
+    }
+    
+    /**
+     * A set of elements MeiElements, find the max/min x/y coordinates to completely
+     * surround them
+     * @param start
+     * @param end
+     * @return
+     */
+    public static Response makeResponse(List<MeiElement> els) {
+        return null;
     }
 
     /**
