@@ -1,10 +1,7 @@
 package ca.mcgill.music.ddmal.meisearch;
 
-public interface SearchStrategy {
+import java.util.List;
 
-    //SearchStrategy(File[] files, DocSearcher searcher);
-    
-    public void search();
-    
-    
+public interface SearchStrategy {
+    public List<Response> search(String query);
 }

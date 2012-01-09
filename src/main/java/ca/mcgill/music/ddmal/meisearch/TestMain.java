@@ -23,31 +23,35 @@ import ca.mcgill.music.ddmal.mei.MeiXmlReader;
 public class TestMain
 {
     private final String query;
-    private DocSearcher searcher;
-    private List<MeiDocument> docs;
+    private final SearchStrategy strategy;
 
-    public TestMain(List<String> files, String searchClass, String query) throws Exception {
+    public TestMain(List<String> files, String searchClass, boolean multithread, String query) throws Exception {
         this.query = query;
-        docs = new ArrayList<MeiDocument>();
-        for (String f : files) {
-            docs.add(MeiXmlReader.loadFile(f));
-        }
 
         Class klass = Class.forName(searchClass);
         Constructor declaredConstructor = klass.getDeclaredConstructor(null);
-        searcher = ((DocSearcher)declaredConstructor.newInstance(null));
+        DocSearcher searcher = ((DocSearcher)declaredConstructor.newInstance(null));
+
+        // Special-case XPath searcher, because we don't create MeiDocuments
+        if (searchClass.indexOf("XPath") >= 0) {
+            strategy = new XPathSearchStrategy(files);
+        } else if (multithread) {
+            // TODO: Configuration option
+            // TODO: How to do Multi Thread XPath search
+            int numThreads = 4;
+            strategy = new MultiThreadSearchStrategy(files, searchClass, numThreads);
+        } else {
+            strategy = new SingleThreadSearchStrategy(files, searcher);
+        }
     }
 
     public void run(int iters) {
         long startTime = System.currentTimeMillis();
 
         for (int i = 0; i < iters; i++) {
-            for (MeiDocument d : docs) {
-                //System.out.println(d);
-                List<Response> res = searcher.find(d, query);
-                for (Response r : res) {
-                    System.out.println(d.getFilename() + ": " + r);
-                }
+            List<Response> res = strategy.search(query);
+            for (Response r : res) {
+                    System.out.println(r.getDocument().getFilename() + ": " + r);
             }
         }
 
@@ -95,6 +99,7 @@ public class TestMain
                 searcherClass = "ca.mcgill.music.ddmal.meisearch." + searcherClass;
             }
         }
+        boolean multithread = cmd.hasOption("m");
 
         String[] qArgs = cmd.getArgs();
         if (qArgs.length != 1) {
@@ -114,7 +119,7 @@ public class TestMain
             testFiles.add(file);
         }
 
-        TestMain a = new TestMain(testFiles, searcherClass, qArgs[0]);
+        TestMain a = new TestMain(testFiles, searcherClass, multithread, qArgs[0]);
         a.run(iters);
     }
 }

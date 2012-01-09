@@ -24,6 +24,10 @@ public class Response {
         this.lr = lr;
     }
 
+    public MeiDocument getDocument() {
+        return doc;
+    }
+
     /**
      * A set of elements MeiElements, find the max/min x/y coordinates to completely
      * surround them
