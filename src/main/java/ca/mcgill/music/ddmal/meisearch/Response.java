@@ -40,12 +40,14 @@ public class Response {
         int maxlry = 0;
         for (MeiElement e : els) {
             MeiElement neume = e.getAncestor("neume");
+            if (neume != null) {
             String facsid = neume.getAttribute("facs");
             MeiElement facs = doc.getElementById(facsid);
             maxulx = Integer.parseInt(facs.getAttribute("ulx"));
             maxuly = Integer.parseInt(facs.getAttribute("uly"));
             maxlrx = Integer.parseInt(facs.getAttribute("lrx"));
             maxlry = Integer.parseInt(facs.getAttribute("lry"));
+            }
         }
         return new Response(doc, new Point(maxulx, maxuly), new Point(maxlrx, maxlry));
     }

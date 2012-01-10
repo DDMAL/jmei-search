@@ -3,26 +3,14 @@ package ca.mcgill.music.ddmal.meisearch;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
-import java.net.URL;
 import java.util.List;
 
 import org.junit.Test;
 
 import ca.mcgill.music.ddmal.mei.MeiDocument;
 import ca.mcgill.music.ddmal.mei.MeiElement;
-import ca.mcgill.music.ddmal.mei.MeiXmlReader;
 
-public class StringDocSearcherTest {
-
-    @Test
-    public void test() {
-        URL url = getClass().getResource("/400.mei");
-        MeiDocument doc = MeiXmlReader.loadFile(url.getFile());
-        StringDocSearcher sr = new StringDocSearcher();
-        sr.find(doc, "abc");
-
-        assertThat(doc.getRootElement().getName(), is("mei"));
-    }
+public class NaiveDocSearcherTest {
 
     @Test
     public void endOfString() {
@@ -43,10 +31,11 @@ public class StringDocSearcherTest {
         d.setRootElement(e);
         d.setFilename("filename");
 
-        StringDocSearcher sr = new StringDocSearcher();
+        NaiveDocSearcher sr = new NaiveDocSearcher();
         List<Response> res = sr.find(d, "abc");
 
         assertThat(res.size(), is(1));
+
     }
 
 }
