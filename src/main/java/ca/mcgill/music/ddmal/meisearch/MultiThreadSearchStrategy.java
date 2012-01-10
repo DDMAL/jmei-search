@@ -17,7 +17,7 @@ public class MultiThreadSearchStrategy implements SearchStrategy {
      *
      * @param searcherClass
      *          A string of the FQ class name of the searcher to use. This is a string
-     *          since we need n instances of it.
+     *          since we need to make n instances of it.
      * @param numThreads
      *          The number of threads to spawn
      */
@@ -30,20 +30,18 @@ public class MultiThreadSearchStrategy implements SearchStrategy {
             List<MeiDocument> d = new ArrayList<MeiDocument>();
             docs.add(d);
         }
-        int counter = 0;
-        int index = 0;
-        int numPerThread = fileList.size() / numThreads + 1;
-        for (String f : fileList) {
-            if (counter > numPerThread) {
-                counter = 0;
-                index++;
+
+        double numPerThread = Math.ceil(fileList.size() / (numThreads * 1.0));
+        for (int i = 0; i < numThreads; i++) {
+            int start = i * (int)numPerThread;
+            int end = Math.min(fileList.size(), start+(int)numPerThread);
+            for (String f : fileList.subList(start, end)) {
+                docs.get(i).add(MeiXmlReader.loadFile(f));
             }
-            docs.get(index).add(MeiXmlReader.loadFile(f));
-            counter++;
         }
     }
 
-    public DocSearcher makeSearcher(String searcherClass) {
+    private DocSearcher makeSearcher(String searcherClass) {
         try {
             Class klass = Class.forName(searcherClass);
             Constructor declaredConstructor = klass.getDeclaredConstructor(null);
@@ -62,22 +60,19 @@ public class MultiThreadSearchStrategy implements SearchStrategy {
             threads.add(new Thread(workers.get(i)));
             threads.get(i).start();
         }
-
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
         List<Response> res = new ArrayList<Response>();
-        boolean finished = false;
-        while (!finished) {
-            boolean stillAlive = false;
-            for (int i = 0; i < numThreads; i++) {
-                if (threads.get(i).isAlive()) {
-                    stillAlive = true;
-                } else {
-                    res.addAll(workers.get(i).getResults());
-                }
-            }
-            finished = stillAlive;
+        // Could also use CyclicBarrier, or have a synchronised list that
+        // gets passed into each thread and does wait/notify on it.
+        for (int i = 0; i < numThreads; i++) {
             try {
-                Thread.sleep(10);
+                threads.get(i).join();
+                res.addAll(workers.get(i).getResults());
             } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         return res;
