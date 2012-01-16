@@ -1,10 +1,16 @@
 package ca.mcgill.music.ddmal.hadoopsearch;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
+import static org.hamcrest.core.Is.is;
 import org.junit.Test;
 
-public class DemoDriverTest {
+public class HadoopMainTest {
 
     @Test
     public void test() throws Exception {
@@ -18,7 +24,7 @@ public class DemoDriverTest {
       FileSystem fs = FileSystem.getLocal(conf);
       fs.delete(output, true); // delete old output
 
-      MaxTemperatureDriver driver = new MaxTemperatureDriver();
+      HadoopMain driver = new HadoopMain();
       driver.setConf(conf);
 
       int exitCode = driver.run(new String[] {
@@ -26,6 +32,10 @@ public class DemoDriverTest {
       assertThat(exitCode, is(0));
 
       checkOutput(conf, output);
+    }
+
+    private void checkOutput(Configuration conf, Path output) {
+
     }
 
 }
