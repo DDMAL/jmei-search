@@ -24,7 +24,7 @@ public class HadoopMainTest {
       FileSystem fs = FileSystem.getLocal(conf);
       fs.delete(output, true); // delete old output
 
-      HadoopMain driver = new HadoopMain();
+      LargeFileMain driver = new LargeFileMain();
       driver.setConf(conf);
 
       int exitCode = driver.run(new String[] {
