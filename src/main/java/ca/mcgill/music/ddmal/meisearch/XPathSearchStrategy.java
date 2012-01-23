@@ -6,8 +6,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.xml.sax.SAXException;
 
 /**
  * Perform a search directly on the XML document using XPath.
@@ -35,7 +38,18 @@ public class XPathSearchStrategy implements SearchStrategy {
         List<Response> res = new ArrayList<Response>();
         for (InputStream stream : docs) {
 
-            res.addAll(searcher.findXpath(stream));
+            try {
+                res.addAll(searcher.findXpath(stream));
+            } catch (ParserConfigurationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (SAXException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
         return res;
     }
