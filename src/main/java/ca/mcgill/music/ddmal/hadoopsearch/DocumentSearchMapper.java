@@ -45,8 +45,10 @@ public class DocumentSearchMapper extends
 		sb.append("]");
 		String pageNo = doc.getElementsByName("page").get(0).getAttribute("n");
 
-		context.write(new Text(pageNo), new Text(sb.toString()));//input for the combiner/reducer
-
+		if (find.size() > 0) {
+		    // Only write if there's a result from the Doc Searcher
+		    context.write(new Text(pageNo), new Text(sb.toString()));
+		}
 	}
 
 }

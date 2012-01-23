@@ -9,63 +9,77 @@
 package ca.mcgill.music.ddmal.hadoopsearch;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileOutputFormat;
-import org.apache.hadoop.mapred.lib.IdentityReducer;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 public class SmallFileMain extends Configured
         implements Tool {
 
-    static class SequenceFileMapper extends MapReduceBase
-            implements Mapper<NullWritable, BytesWritable, Text, BytesWritable> {
-
-        private JobConf conf;
-
-        @Override
-        public void configure(JobConf conf) {
-            this.conf = conf;
-        }
-
-        public void map(NullWritable key, BytesWritable value,
-                OutputCollector<Text, BytesWritable> output, Reporter reporter)
-                throws IOException {
-
-            String filename = conf.get("map.input.file");
-            output.collect(new Text(filename), value);
-        }
-
-    }
-
     public int run(String[] args) throws IOException {
-        JobConf conf = null;
-        // JobConf conf = JobBuilder.parseInputAndOutput(this, getConf(), args);
-        if (conf == null) {
+        Configuration conf = getConf();
+        conf.set(
+                "io.serializations",
+                "org.apache.hadoop.io.serializer.JavaSerialization,org.apache.hadoop.io.serializer.WritableSerialization");
+        conf.set("query", args[2]);
+
+        Job job = new Job(conf, "jobName");
+
+        FileInputFormat.setInputPaths(job, args[0]);
+
+        job.setJarByClass(SmallFileMain.class);
+        job.setMapperClass(DocumentSearchMapper.class);
+        //job.setCombinerClass(DocumentSearchReducer.class);
+        //job.setReducerClass(DocumentSearchReducer.class);
+
+        // XXX This one is important
+        //job.setOutputFormat(SequenceFileOutputFormat.class);
+        
+        job.setInputFormatClass(WholeFileInputFormat.class);
+
+        job.setOutputKeyClass(Text.class);// Keys will be Text
+        job.setOutputValueClass(Text.class);// Values will be Integers
+
+        Path outPath = new Path(args[1]);
+        FileOutputFormat.setOutputPath(job, outPath);
+        FileSystem dfs = FileSystem.get(outPath.toUri(), conf);
+
+        // the following checks if the output folder already exists, if so, it
+        // will delete it
+        if (dfs.exists(outPath)) {
+            dfs.delete(outPath, true);
+        }
+
+        try {
+            job.waitForCompletion(true);
+
+        } catch (InterruptedException ex) {
+            Logger.getLogger(LargeFileMain.class.getName()).log(Level.SEVERE,
+                    null, ex);
+            return -1;
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(LargeFileMain.class.getName()).log(Level.SEVERE,
+                    null, ex);
             return -1;
         }
-
-        conf.setInputFormat(WholeFileInputFormat.class);
-        conf.setOutputFormat(SequenceFileOutputFormat.class);
-
-        conf.setOutputKeyClass(Text.class);
-        conf.setOutputValueClass(BytesWritable.class);
-
-        conf.setMapperClass(SequenceFileMapper.class);
-        conf.setReducerClass(IdentityReducer.class);
-
-        JobClient.runJob(conf);
         return 0;
+
+        /*
+        conf.setOutputFormat(SequenceFileOutputFormat.class);
+        */
     }
 
     public static void main(String[] args) throws Exception {

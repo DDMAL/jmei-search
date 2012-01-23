@@ -1,4 +1,7 @@
+// From the Hadoop book and https://gist.github.com/808035
+
 package ca.mcgill.music.ddmal.hadoopsearch;
+
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -8,58 +11,67 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
+class WholeFileRecordReader extends RecordReader<NullWritable, BytesWritable> {
 
-class WholeFileRecordReader implements RecordReader<NullWritable, BytesWritable> {
+    private FileSplit fileSplit;
+    private Configuration conf;
+    private boolean processed = false;
 
-  private FileSplit fileSplit;
-  private Configuration conf;
-  private boolean processed = false;
+    private NullWritable key = NullWritable.get();
+    private BytesWritable value = new BytesWritable();
 
-  public WholeFileRecordReader(FileSplit fileSplit, Configuration conf)
-      throws IOException {
-    this.fileSplit = fileSplit;
-    this.conf = conf;
-  }
-
-  public NullWritable createKey() {
-    return NullWritable.get();
-  }
-
-  public BytesWritable createValue() {
-    return new BytesWritable();
-  }
-
-  public long getPos() throws IOException {
-    return processed ? fileSplit.getLength() : 0;
-  }
-
-  public float getProgress() throws IOException {
-    return processed ? 1.0f : 0.0f;
-  }
-
-  public boolean next(NullWritable key, BytesWritable value) throws IOException {
-    if (!processed) {
-      byte[] contents = new byte[(int) fileSplit.getLength()];
-      Path file = fileSplit.getPath();
-      FileSystem fs = file.getFileSystem(conf);
-      FSDataInputStream in = null;
-      try {
-        in = fs.open(file);
-        IOUtils.readFully(in, contents, 0, contents.length);
-        value.set(contents, 0, contents.length);
-      } finally {
-        IOUtils.closeStream(in);
-      }
-      processed = true;
-      return true;
+    public void initialize(InputSplit inputSplit,
+            TaskAttemptContext taskAttemptContext) throws IOException,
+            InterruptedException {
+        this.fileSplit = (FileSplit) inputSplit;
+        this.conf = taskAttemptContext.getConfiguration();
     }
-    return false;
-  }
 
-  public void close() throws IOException {
-    // do nothing
-  }
+    public boolean nextKeyValue() throws IOException {
+        if (!processed) {
+            byte[] contents = new byte[(int) fileSplit.getLength()];
+
+            Path file = fileSplit.getPath();
+            FileSystem fs = file.getFileSystem(conf);
+
+            FSDataInputStream in = null;
+            try {
+                in = fs.open(file);
+                IOUtils.readFully(in, contents, 0, contents.length);
+                value.set(contents, 0, contents.length);
+            } finally {
+                IOUtils.closeStream(in);
+            }
+            processed = true;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public NullWritable getCurrentKey() throws IOException,
+            InterruptedException {
+        return key;
+    }
+
+    @Override
+    public BytesWritable getCurrentValue() throws IOException,
+            InterruptedException {
+        return value;
+    }
+
+    @Override
+    public float getProgress() throws IOException, InterruptedException {
+        return processed ? 1.0f : 0.0f;
+    }
+
+    @Override
+    public void close() throws IOException {
+        // do nothing
+    }
 }
