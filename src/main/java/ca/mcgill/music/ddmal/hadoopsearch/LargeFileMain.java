@@ -45,8 +45,6 @@ public class LargeFileMain extends Configured implements Tool {
 
         job.setJarByClass(LargeFileMain.class);
         job.setMapperClass(DocumentSearchMapper.class);
-        //job.setCombinerClass(DocumentSearchReducer.class);
-        //job.setReducerClass(DocumentSearchReducer.class);
 
         job.setInputFormatClass(XmlInputFormat.class);
 
