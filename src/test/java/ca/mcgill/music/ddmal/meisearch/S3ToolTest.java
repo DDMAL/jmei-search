@@ -17,8 +17,8 @@ public class S3ToolTest {
     
     @Test
     public void testList() {
-        List<String> list = S3Tool.listBucket("ddmal_liber");
-        assertThat(list.size(), is(3236));
+        List<String> list = S3Tool.listBucket("ddmal_liber", "");
+        assertThat(list.size(), is(2327));
     }
     
     @Test

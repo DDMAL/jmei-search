@@ -62,9 +62,9 @@ public class S3Tool {
         }
     }
     
-    public static List<String> listBucket(String bucketName) {
+    public static List<String> listBucket(String bucketName, String prefix) {
         List<String> ret = new ArrayList<String>();
-        ObjectListing listing = getInstance().listObjects(new ListObjectsRequest().withBucketName(bucketName));
+        ObjectListing listing = getInstance().listObjects(new ListObjectsRequest().withBucketName(bucketName).withPrefix(prefix));
         for (S3ObjectSummary s : listing.getObjectSummaries()) {
             StringBuilder sb = new StringBuilder();
             sb.append("s3://").append(bucketName).append("/").append(s.getKey());

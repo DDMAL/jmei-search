@@ -13,9 +13,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.io.FileUtils;
 
-import ca.mcgill.music.ddmal.mei.MeiDocument;
-import ca.mcgill.music.ddmal.mei.MeiXmlReader;
-
 /**
  * Hello world!
  *
@@ -46,7 +43,6 @@ public class TestMain
 
         for (int i = 0; i < iters; i++) {
             List<Response> res = strategy.search(query);
-            StringBuilder sb = new StringBuilder("[");
             for (Response r : res) {
                 System.out.println(r.getPageNumber() + "\t" + r.toString());
             }
@@ -115,7 +111,7 @@ public class TestMain
         List<String> testFiles;
         if (bucketName != null) {
             // If there's an s3 bucket name, load the contents of the bucket
-            testFiles = S3Tool.listBucket(bucketName);
+            testFiles = S3Tool.listBucket(bucketName, "s");
         } else if (fileList != null) {
             // else if there's a file that contains all the files to load
             testFiles = FileUtils.readLines(new File(fileList));

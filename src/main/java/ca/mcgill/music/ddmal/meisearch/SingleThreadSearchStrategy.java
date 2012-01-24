@@ -21,7 +21,15 @@ public class SingleThreadSearchStrategy implements SearchStrategy {
         for (String fn : fileList) {
             String fileContents = S3Tool.readFile(fn);
             MeiDocument d = MeiXmlReader.loadDocument(fileContents);
-            res.addAll(searcher.find(d, query));
+            if (d.isCorpus()) {
+                System.out.println("corpus!");
+                List<MeiDocument> splitCorpus = d.splitCorpus();
+                for (MeiDocument s : splitCorpus) {
+                    res.addAll(searcher.find(s, query));
+                }
+            } else {
+                res.addAll(searcher.find(d, query));
+            }
         }
         return res;
     }
