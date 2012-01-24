@@ -41,7 +41,6 @@ public class StringDocSearcherTest {
         e.addChild(b);
         e.addChild(c);
         d.setRootElement(e);
-        d.setFilename("filename");
 
         StringDocSearcher sr = new StringDocSearcher();
         List<Response> res = sr.find(d, "abc");

@@ -29,7 +29,6 @@ public class NaiveDocSearcherTest {
         e.addChild(b);
         e.addChild(c);
         d.setRootElement(e);
-        d.setFilename("filename");
 
         NaiveDocSearcher sr = new NaiveDocSearcher();
         List<Response> res = sr.find(d, "abc");

@@ -1,7 +1,5 @@
 package ca.mcgill.music.ddmal.meisearch;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +14,7 @@ public class MultiThreadSearchStrategyTest {
             ss.add(String.valueOf((i+1)));
         }
 
-        MultiThreadSearchStrategy search = new MultiThreadSearchStrategy(ss, "foo", 4);
-
+        new MultiThreadSearchStrategy(ss, "foo", 4);
     }
 
 }
