@@ -12,20 +12,19 @@ import ca.mcgill.music.ddmal.mei.MeiElement;
  */
 public class Response {
 
-    /** The document this are is in. */
-    public final MeiDocument doc;
     /** Location of the area. */
     public final Point ul;
     public final Point lr;
+    private final String pageNumber;
 
-    public Response(MeiDocument doc, Point ul, Point lr) {
-        this.doc = doc;
+    public Response(String pageNumber, Point ul, Point lr) {
+        this.pageNumber = pageNumber;
         this.ul = ul;
         this.lr = lr;
     }
 
-    public MeiDocument getDocument() {
-        return doc;
+    public String getPageNumber() {
+        return pageNumber;
     }
 
     /**
@@ -49,7 +48,8 @@ public class Response {
             maxlry = Integer.parseInt(facs.getAttribute("lry"));
             }
         }
-        return new Response(doc, new Point(maxulx, maxuly), new Point(maxlrx, maxlry));
+        String pageNo = doc.getElementsByName("page").get(0).getAttribute("n");
+        return new Response(pageNo, new Point(maxulx, maxuly), new Point(maxlrx, maxlry));
     }
 
     @Override

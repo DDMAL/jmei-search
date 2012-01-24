@@ -10,7 +10,6 @@ import org.junit.Test;
 public class ResponseTest {
 
     @Test
-
     public void test() {
         String query = "abc";
         String[] qparts = query.split("");

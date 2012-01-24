@@ -46,8 +46,9 @@ public class TestMain
 
         for (int i = 0; i < iters; i++) {
             List<Response> res = strategy.search(query);
+            StringBuilder sb = new StringBuilder("[");
             for (Response r : res) {
-                    System.out.println(r.getDocument().getFilename() + ": " + r);
+                System.out.println(r.getPageNumber() + "\t" + r.toString());
             }
         }
 

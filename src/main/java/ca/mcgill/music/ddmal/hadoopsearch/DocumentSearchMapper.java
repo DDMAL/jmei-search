@@ -29,25 +29,17 @@ public class DocumentSearchMapper extends
 			throws IOException, InterruptedException {
 
 	    String query = context.getConfiguration().get("query");
-
 		String xmlString = value1.toString();
 
 		NaiveDocSearcher ds = new NaiveDocSearcher();
 		MeiDocument doc = MeiXmlReader.loadDocument(xmlString);
 
 		List<Response> find = ds.find(doc, query);
-		StringBuilder sb = new StringBuilder("[");
-		String sep = "";
-		for (Response r : find) {
-		    sb.append(sep).append(r.toString());
-		    sep = "/";
-		}
-		sb.append("]");
 		String pageNo = doc.getElementsByName("page").get(0).getAttribute("n");
 
-		if (find.size() > 0) {
-		    // Only write if there's a result from the Doc Searcher
-		    context.write(new Text(pageNo), new Text(sb.toString()));
+		// Write one k/v for each result - even if they're on the same page.
+		for (Response r: find) {
+		    context.write(new Text(pageNo), new Text(r.toString()));
 		}
 	}
 
