@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>ca.mcgill.music.ddmal</groupId>
-	<artifactId>meisearch</artifactId>
+	<artifactId>meihadoop</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>meisearch</name>
-	<url>http://maven.apache.org</url>
+	<name>MEI Hadoop search</name>
+    <url>https://github.com/DDMAL/jmei-search</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
