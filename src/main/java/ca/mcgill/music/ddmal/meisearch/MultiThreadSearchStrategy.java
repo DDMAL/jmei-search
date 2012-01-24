@@ -4,14 +4,11 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
-import ca.mcgill.music.ddmal.mei.MeiDocument;
-import ca.mcgill.music.ddmal.mei.MeiXmlReader;
-
 public class MultiThreadSearchStrategy implements SearchStrategy {
 
     private final int numThreads;
     private final String searcherClass;
-    private List<List<MeiDocument> > docs;
+    private List<List<String> > fileNames;
 
     /**
      *
@@ -25,10 +22,10 @@ public class MultiThreadSearchStrategy implements SearchStrategy {
         this.searcherClass = searcherClass;
         this.numThreads = numThreads;
 
-        docs = new ArrayList<List<MeiDocument>>();
+        fileNames = new ArrayList<List<String>>();
         for (int i = 0; i < numThreads; i++) {
-            List<MeiDocument> d = new ArrayList<MeiDocument>();
-            docs.add(d);
+            List<String> d = new ArrayList<String>();
+            fileNames.add(d);
         }
 
         double numPerThread = Math.ceil(fileList.size() / (numThreads * 1.0));
@@ -36,7 +33,7 @@ public class MultiThreadSearchStrategy implements SearchStrategy {
             int start = i * (int)numPerThread;
             int end = Math.min(fileList.size(), start+(int)numPerThread);
             for (String f : fileList.subList(start, end)) {
-                docs.get(i).add(MeiXmlReader.loadFile(f));
+                fileNames.get(i).add(f);
             }
         }
     }
@@ -56,7 +53,7 @@ public class MultiThreadSearchStrategy implements SearchStrategy {
         List<MultiThreadSearchWorker> workers = new ArrayList<MultiThreadSearchWorker>();
         List<Thread> threads = new ArrayList<Thread>();
         for (int i = 0; i < numThreads; i++) {
-            workers.add(new MultiThreadSearchWorker(docs.get(i), makeSearcher(searcherClass), query));
+            workers.add(new MultiThreadSearchWorker(fileNames.get(i), makeSearcher(searcherClass), query));
             threads.add(new Thread(workers.get(i)));
             threads.get(i).start();
         }
@@ -81,22 +78,18 @@ public class MultiThreadSearchStrategy implements SearchStrategy {
 
     private class MultiThreadSearchWorker implements Runnable {
 
-        private final List<MeiDocument> files;
-        private final DocSearcher searcher;
         private List<Response> results;
         private final String query;
+        private SingleThreadSearchStrategy strat;
 
-        public MultiThreadSearchWorker(List<MeiDocument> files, DocSearcher searcher, String query) {
-            this.files = files;
-            this.searcher = searcher;
+        public MultiThreadSearchWorker(List<String> files, DocSearcher searcher, String query) {
             this.query = query;
             results = new ArrayList<Response>();
+            strat = new SingleThreadSearchStrategy(files, searcher);
         }
 
         public void run() {
-            for (MeiDocument d : files) {
-                results.addAll(searcher.find(d, query));
-            }
+            results.addAll(strat.search(query));
         }
 
         public List<Response> getResults() {

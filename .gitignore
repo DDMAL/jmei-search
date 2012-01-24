@@ -3,3 +3,4 @@
 .settings/*
 target/*
 *.class
+src/main/resources/AwsCredentials.properties

@@ -32,13 +32,9 @@ public class TestMain
         Constructor declaredConstructor = klass.getDeclaredConstructor(null);
         DocSearcher searcher = ((DocSearcher)declaredConstructor.newInstance(null));
 
-        // Special-case XPath searcher, because we don't create MeiDocuments
-        if (searchClass.indexOf("XPath") >= 0) {
-            strategy = new XPathSearchStrategy(files);
-        } else if (multithread) {
-            // TODO: Configuration option
-            // TODO: How to do Multi Thread XPath search
-            int numThreads = 4;
+        if (multithread) {
+            // TODO: Configuration option for number threads
+            int numThreads = 2; // 2 for ec2
             strategy = new MultiThreadSearchStrategy(files, searchClass, numThreads);
         } else {
             strategy = new SingleThreadSearchStrategy(files, searcher);
@@ -67,6 +63,7 @@ public class TestMain
         Options options = new Options();
         options.addOption(OptionBuilder.withArgName("file").hasArg().withDescription("MEI file to search; or").create("f"));
         options.addOption(OptionBuilder.withArgName("filelist").hasArg().withDescription("File containing files to search").create("l"));
+        options.addOption(OptionBuilder.withArgName("bucketname").hasArg().withDescription("S3 Bucket to read files from").create("b"));
         options.addOption(OptionBuilder.withArgName("n").hasArg().withDescription("Number of times to search").create("n"));
         options.addOption(OptionBuilder.withArgName("DocSearcher").hasArg().withDescription("FQ class of a DocSearcher implementation").create("s"));
         options.addOption("m", false, "Run multithreaded");
@@ -79,7 +76,7 @@ public class TestMain
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse( options, args);
-        String file = "";
+        String file = null;
         if (cmd.hasOption("f")) {
             file = cmd.getOptionValue("f");
         }
@@ -87,11 +84,15 @@ public class TestMain
         if (cmd.hasOption("n")) {
             iters = Integer.parseInt(cmd.getOptionValue("n"));
         }
-        String fileList = "";
+        String fileList = null;
         if (cmd.hasOption("l")) {
             fileList = cmd.getOptionValue("l");
         }
-        String searcherClass = "ca.mcgill.music.ddmal.meisearch.NaiveDocSearcher";
+        String bucketName = null;
+        if (cmd.hasOption("b")) {
+            bucketName = cmd.getOptionValue("b");
+        }
+        String searcherClass = "ca.mcgill.music.ddmal.meisearch.StringDocSearcher";
         if (cmd.hasOption("s")) {
             searcherClass = cmd.getOptionValue("s");
             // If not a FQ class name, add the package
@@ -106,18 +107,23 @@ public class TestMain
             System.err.println(">> Missing required query parameter");
             System.exit(1);
         }
-        if (file.equals("") && fileList.equals("")) {
-            System.err.println(">> Missing either -f (file) or -l (fileList) option");
+        if (file == null && fileList == null && bucketName == null) {
+            System.err.println(">> Missing either -f (file) or -l (fileList) or -b (bucketName) option");
             System.exit(1);
         }
-        // if there's a file list, load it. Otherwise the list just has the -l file in it.
         List<String> testFiles;
-        if (!fileList.equals("")) {
+        if (bucketName != null) {
+            // If there's an s3 bucket name, load the contents of the bucket
+            testFiles = S3Tool.listBucket(bucketName);
+        } else if (fileList != null) {
+            // else if there's a file that contains all the files to load
             testFiles = FileUtils.readLines(new File(fileList));
         } else {
+            // else it's just a single file (with -l)
             testFiles = new ArrayList<String>();
             testFiles.add(file);
         }
+        System.out.println("testing with " + testFiles.size() + " files");
 
         TestMain a = new TestMain(testFiles, searcherClass, multithread, qArgs[0]);
         a.run(iters);

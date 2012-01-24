@@ -9,19 +9,18 @@ import ca.mcgill.music.ddmal.mei.MeiXmlReader;
 public class SingleThreadSearchStrategy implements SearchStrategy {
 
     private final DocSearcher searcher;
-    private final List<MeiDocument> docs;
+    private final List<String> fileList;
 
     public SingleThreadSearchStrategy(List<String> fileList, DocSearcher searcher) {
+        this.fileList = fileList;
         this.searcher = searcher;
-        docs = new ArrayList<MeiDocument>();
-        for (String f : fileList) {
-            docs.add(MeiXmlReader.loadFile(f));
-        }
     }
 
     public List<Response> search(String query) {
         List<Response> res = new ArrayList<Response>();
-        for (MeiDocument d : docs) {
+        for (String fn : fileList) {
+            String fileContents = S3Tool.readFile(fn);
+            MeiDocument d = MeiXmlReader.loadDocument(fileContents);
             res.addAll(searcher.find(d, query));
         }
         return res;
