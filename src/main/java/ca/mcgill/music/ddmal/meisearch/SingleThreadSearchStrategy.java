@@ -10,6 +10,11 @@ public class SingleThreadSearchStrategy implements SearchStrategy {
 
     private final DocSearcher searcher;
     private final List<String> fileList;
+    
+    // for split files
+    private int startPos = 0;
+    private int endPos = 0;
+    private String allContents;
 
     public SingleThreadSearchStrategy(List<String> fileList, DocSearcher searcher) {
         this.fileList = fileList;
@@ -20,17 +25,41 @@ public class SingleThreadSearchStrategy implements SearchStrategy {
         List<Response> res = new ArrayList<Response>();
         for (String fn : fileList) {
             String fileContents = S3Tool.readFile(fn);
-            MeiDocument d = MeiXmlReader.loadDocument(fileContents);
-            if (d.isCorpus()) {
+            if (fileContents.indexOf("meiCorpus") >= 0) {
                 System.out.println("corpus!");
-                List<MeiDocument> splitCorpus = d.splitCorpus();
-                for (MeiDocument s : splitCorpus) {
-                    res.addAll(searcher.find(s, query));
+                init(fileContents);
+                while (hasNext()) {
+                    String individualContents = getNext();
+                    MeiDocument d = MeiXmlReader.loadDocument(individualContents);
+                    res.addAll(searcher.find(d, query));
                 }
             } else {
+                MeiDocument d = MeiXmlReader.loadDocument(fileContents);
                 res.addAll(searcher.find(d, query));
             }
         }
         return res;
+    }
+    
+    /*package*/ void init(String contents) {
+        allContents = contents;
+    }
+    
+    /*package*/ boolean hasNext() {
+        String TAG_BEGIN = "<mei ";
+        String TAG_END = "</mei>";
+        startPos = allContents.indexOf(TAG_BEGIN, startPos);
+        endPos = allContents.indexOf(TAG_END, startPos) + TAG_END.length();
+        if (startPos >= 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    /*package*/ String getNext() {
+        String ret = allContents.substring(startPos, endPos);
+        startPos = endPos;
+        return ret;
     }
 }
