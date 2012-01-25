@@ -3,10 +3,12 @@ package ca.mcgill.music.ddmal.meisearch;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -51,8 +53,9 @@ public class S3Tool {
         try {
             if (isS3File(filename)) {
                 String[] parts = filename.split("/");
-                assert parts.length == 4;
-                S3Object object = getInstance().getObject(new GetObjectRequest(parts[2], parts[3]));
+                String[] keyArray = Arrays.copyOfRange(parts, 3, parts.length);
+                String key = StringUtils.join(keyArray, "/");
+                S3Object object = getInstance().getObject(new GetObjectRequest(parts[2], key));
                 return IOUtils.toString(object.getObjectContent());
             } else {
                 return FileUtils.readFileToString(new File(filename));

@@ -26,5 +26,11 @@ public class S3ToolTest {
         String contents = S3Tool.readFile("s3://ddmal_liber/2331_corr.mei");
         assertThat(contents.startsWith("<?xml version"), is(true));
     }
+    
+    @Test
+    public void testOpen2() {
+        String contents = S3Tool.readFile("s3://liber-small-10/01/2340_corr.mei");
+        assertThat(contents.startsWith("<?xml version"), is(true));
+    }
 
 }
